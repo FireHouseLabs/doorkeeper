@@ -1,0 +1,16 @@
+{
+    "name": "DoorKeeper",
+    "short_name": "DoorKeeper",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "type": "image/png",
+            "sizes": "any"
+        }
+    ]
+}

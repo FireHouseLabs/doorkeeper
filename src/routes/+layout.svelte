@@ -21,7 +21,7 @@
 				}
 			});
 			subscription = data.subscription;
-			console.log(session);
+			// console.log(session);
 		}
 	});
 
