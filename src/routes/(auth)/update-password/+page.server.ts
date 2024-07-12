@@ -10,7 +10,7 @@ export const actions = {
 
 		if (password && confirm && password == confirm) {
 			await supabase.auth.updateUser({ password });
-			redirect(303, '/');
+			redirect(303, '/control');
 		}
 	}
 } satisfies Actions;
