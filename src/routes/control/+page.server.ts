@@ -1,6 +1,7 @@
 import { redirect, type Actions, type RequestEvent } from '@sveltejs/kit';
 import { authenticate, getToken } from '$lib/services/inceptionAuthService';
 import type { PageServerLoad } from '../$types';
+import { PRIVATE_INCEPTION_BASE_URL } from '$env/static/private';
 
 export const load = (async ({ locals: { getSession } }) => {
 	const session = await getSession();
@@ -9,10 +10,11 @@ export const load = (async ({ locals: { getSession } }) => {
 	}
 	return {};
 }) satisfies PageServerLoad;
-  
+
+const baseUrl = PRIVATE_INCEPTION_BASE_URL
 
 async function controlDoor(id: string, token: string) {
-    const url = `https://skytunnel.com.au/inception/IN96031349/api/v1/control/door/${id}/activity`;
+    const url = `${baseUrl}/api/v1/control/door/${id}/activity`;
     const body = {
       Type: 'ControlDoor',
       DoorControlType: 'Open',
@@ -36,7 +38,7 @@ async function controlDoor(id: string, token: string) {
       }
   
       const data = await response.json();
-      console.log('Door control response:', data);
+      // console.log('Door control response:', data);
       return data;
     } catch (error) {
       console.error('Error in controlDoor:', error);
@@ -62,7 +64,7 @@ async function controlDoor(id: string, token: string) {
           return { success: true, result };
         } catch (error) {
           console.error('Failed to execute control action:', error);
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       } else {
         return { success: false, error: 'Failed to obtain authentication token' };

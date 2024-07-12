@@ -5,20 +5,16 @@
 	import { DoorOpen, Warehouse } from 'lucide-svelte';
     import { toast } from '@zerodevx/svelte-toast'
     import { writable } from 'svelte/store';
+	import { PUBLIC_SITE_LATITUDE, PUBLIC_SITE_LONGITUDE } from '$env/static/public';
 
 	let isLocationValid = false;
 	let userLocation = null; // To store user's current location
 	let userLocationError = ''; // To store error message
 
-	// const targetLocation = {
-	// 	latitude: 51.5074, // Example latitude of target location
-	// 	longitude: -0.1278 // Example longitude of target location
-	// };
-
 	// Success Location
 	const targetLocation = {
-		latitude: -38.262234, // Example latitude of target location
-		longitude: 145.189911 // Example longitude of target location
+		latitude: PUBLIC_SITE_LATITUDE, // Example latitude of target location
+		longitude: PUBLIC_SITE_LONGITUDE, // Example longitude of target location
 	};
 
 	const maxDistance = 5000; // Maximum distance in meters
@@ -89,6 +85,7 @@
     }
 }
 </script>
+
 
 {#if isLocationValid}
 	<div class="flex h-screen flex-col items-center px-8 py-8">

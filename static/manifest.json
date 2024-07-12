@@ -1,7 +1,7 @@
 {
     "name": "DoorKeeper",
     "short_name": "DoorKeeper",
-    "start_url": "/",
+    "start_url": "/control",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
