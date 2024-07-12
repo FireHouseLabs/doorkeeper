@@ -17,7 +17,7 @@
 			return async ({ result }) => {
 				if (result.status == 303) {
 					isSubmitting = false;
-					goto('/', { invalidateAll: true });
+					goto('/control', { invalidateAll: true });
 				}
 			};
 		}}
