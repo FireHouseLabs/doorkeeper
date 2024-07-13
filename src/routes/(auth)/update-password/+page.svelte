@@ -12,6 +12,8 @@
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-start p-4">
+	<h1 class="mb-4 text-3xl font-bold">Update Password</h1>
+	<p class="mb-4 text-lg">Set a password for your account to access DoorKeeper.</p>
 	<form
 		use:enhance={() => {
 			return async ({ result }) => {
@@ -27,13 +29,6 @@
 		<PasswordInput />
 		<PasswordInput name="confirm-password" />
 		<div class="my-4"></div>
-		<div class="flex flex-row items-center justify-end">
-			<a
-				class="text-right text-xs font-semibold tracking-tight text-green-600 hover:underline"
-				aria-label="forgot password"
-				href="reset-password">Password forgotten?</a
-			>
-		</div>
 		<button
 			on:click={onClick}
 			class="btn relative bg-zinc-600 px-4 py-2 text-xs uppercase text-white active:bg-zinc-400"
