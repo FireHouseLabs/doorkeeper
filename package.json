@@ -1,6 +1,6 @@
 {
 	"name": "supabase-auth",
-	"version": "0.0.1",
+	"version": "1.0.2",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --open --port 5174",
