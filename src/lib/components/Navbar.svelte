@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Session } from '@supabase/supabase-js';
-	import { DoorOpen, Menu, X } from 'lucide-svelte'; // Import the necessary icons
+	import { DoorClosed, Menu, X } from 'lucide-svelte'; // Import the necessary icons
 
 	export let session: Session | null;
 
@@ -13,7 +13,7 @@
 
 <div class="flex h-20 w-screen flex-row items-center justify-between gap-4 p-4 px-6 shadow-md">
 	<a class="flex items-center font-semibold tracking-tighter" href="/">
-		<DoorOpen class="mr-2 h-6 w-6" />
+		<DoorClosed class="mr-2 h-6 w-6" />
 		DoorKeeper</a>
 	<div class="hidden md:flex flex-row items-center gap-8">
 		{#if session && session.user}

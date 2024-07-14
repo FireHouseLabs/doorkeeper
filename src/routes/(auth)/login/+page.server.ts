@@ -8,7 +8,7 @@ export const load = (async () => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	default: async ({ request, locals: { supabase } }) => {
+	login: async ({ request, locals: { supabase } }) => {  // renamed from default to login
 		const result = await getEmailandPassword(request);
 		if (isTypeAuthRequestData(result)) {
 			const { email, password } = result;
@@ -16,7 +16,7 @@ export const actions = {
 				const { data } = await supabase.auth.signInWithPassword({ email, password });
 				return {
 					status: 200,
-					data
+					data,
 				};
 			} catch (error) {
 				console.log('Error', error);

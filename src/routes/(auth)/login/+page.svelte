@@ -12,31 +12,37 @@
 
 <div class="flex h-full w-full flex-col items-center justify-start p-4">
 	<form
-		use:enhance={() => {
+		use:enhance={(form) => {
 			return async ({ result }) => {
 				if (result.status == 200) {
 					isLogin = false;
-					goto('/control', { invalidateAll: true });
+					// setTimeout(() => goto('/control', { invalidateAll: true }), 100);
+					window.location.href = '/control';
+					console.log(result);
+				} else {
+					console.log('Error during login:', result);
 				}
 			};
 		}}
 		class="flex w-full flex-col gap-4 lg:w-1/4"
-		action=""
+		action="?/login" 
 		method="POST"
 	>
 		<div>
-			<label class="flex flex-col gap-2 text-xs" for="name">
+			<label class="flex flex-col gap-2 text-xs" for="email">
 				<span>Email</span>
 				<input
 					class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
-					type="text"
+					type="email"
 					name="email"
+					required
 				/>
 			</label>
 		</div>
 		<PasswordInput />
 		<div class="my-"></div>
 		<button
+			type="submit"
 			on:click={onClick}
 			class="btn relative bg-zinc-600 px-4 py-2 text-xs uppercase text-white active:bg-zinc-400"
 		>
