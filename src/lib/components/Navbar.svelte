@@ -28,6 +28,7 @@
 				<!-- <li><a class="text-xs font-light uppercase" href="/profile">Profile</a></li> -->
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
+				<li>v{PKG.version}</li>
 			{/if}
 		</ul>
 	</div>
@@ -56,6 +57,7 @@
 				<!-- <li><a class="text-xs font-light uppercase" href="/profile">Profile</a></li> -->
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
+				<li>Version: {PKG.version}</li>
 			{/if}
 		</ul>
 	</div>
