@@ -1,6 +1,6 @@
 {
 	"name": "supabase-auth",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --open --port 5174",
@@ -38,6 +38,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@rollup/wasm-node": "^4.18.1",
 		"@supabase/ssr": "^0.1.0",
 		"@supabase/supabase-js": "^2.39.3",
 		"daisyui": "^4.6.0",
