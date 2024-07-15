@@ -15,8 +15,8 @@
 
 	// Success Location
 	const targetLocation = {
-		latitude: PUBLIC_SITE_LATITUDE, // Set in environment variable for now so location is always secret
-		longitude: PUBLIC_SITE_LONGITUDE // Set in environment variable for now so location is always secret
+		latitude: Number(PUBLIC_SITE_LATITUDE), // Set in environment variable for now so location is always secret
+		longitude: Number(PUBLIC_SITE_LONGITUDE) // Set in environment variable for now so location is always secret
 	};
 
 	const maxDistance = 5000; // Maximum distance in meters
@@ -137,4 +137,5 @@
 			{/if}
 		</div>
 	</div>
+	<Notification />
 {/if}
