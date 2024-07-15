@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, SubmitFunction } from './$types.js';
-	import BarsRotateIcon from '$lib/icons/BarsRotateIcon.svelte'; // Loading icon
+	import BarsRotateIcon from '$lib/icons/BarsRotateIcon.svelte';
 
 	export let form: ActionData;
 
