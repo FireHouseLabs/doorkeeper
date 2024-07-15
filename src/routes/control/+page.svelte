@@ -6,7 +6,6 @@
 	import { toast } from '@zerodevx/svelte-toast';
 	import { writable } from 'svelte/store';
 	import { PUBLIC_SITE_LATITUDE, PUBLIC_SITE_LONGITUDE } from '$env/static/public';
-	import { isiOS } from '$lib/utils/detectOS';
 	import Notification from '$lib/components/Notification.svelte';
 
 	let isLocationValid = false;

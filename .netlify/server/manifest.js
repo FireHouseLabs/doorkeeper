@@ -7,10 +7,10 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set(["apple-touch-icon.png","favicon.ico","favicon.png","manifest.json","offline.html","service-worker.js"]),
-	mimeTypes: {".png":"image/png",".json":"application/json",".html":"text/html"},
+	assets: new Set(["apple-touch-icon.png","favicon.ico","favicon.png","hero-image.jpg","manifest.json","offline.html","service-worker.js"]),
+	mimeTypes: {".png":"image/png",".jpg":"image/jpeg",".json":"application/json",".html":"text/html"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.C0YVZvhi.js","app":"_app/immutable/entry/app.a0RM6j5a.js","imports":["_app/immutable/entry/start.C0YVZvhi.js","_app/immutable/chunks/entry.DVrDpmsd.js","_app/immutable/chunks/scheduler.DyQmQW35.js","_app/immutable/chunks/index.C1mwccGl.js","_app/immutable/entry/app.a0RM6j5a.js","_app/immutable/chunks/preload-helper.D6kgxu3v.js","_app/immutable/chunks/scheduler.DyQmQW35.js","_app/immutable/chunks/index.aTnk53p9.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {"start":"_app/immutable/entry/start.Bk63piZ5.js","app":"_app/immutable/entry/app.Cu-lZL8Y.js","imports":["_app/immutable/entry/start.Bk63piZ5.js","_app/immutable/chunks/entry.DseKkAxs.js","_app/immutable/chunks/scheduler.DyQmQW35.js","_app/immutable/chunks/index.C1mwccGl.js","_app/immutable/entry/app.Cu-lZL8Y.js","_app/immutable/chunks/preload-helper.D6kgxu3v.js","_app/immutable/chunks/scheduler.DyQmQW35.js","_app/immutable/chunks/index.aTnk53p9.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -29,8 +29,7 @@ return {
 			__memo(() => import('./nodes/14.js')),
 			__memo(() => import('./nodes/15.js')),
 			__memo(() => import('./nodes/16.js')),
-			__memo(() => import('./nodes/17.js')),
-			__memo(() => import('./nodes/18.js'))
+			__memo(() => import('./nodes/17.js'))
 		],
 		routes: [
 			{
@@ -90,13 +89,6 @@ return {
 				endpoint: null
 			},
 			{
-				id: "/forbidden",
-				pattern: /^\/forbidden\/?$/,
-				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 15 },
-				endpoint: null
-			},
-			{
 				id: "/(auth)/login",
 				pattern: /^\/login\/?$/,
 				params: [],
@@ -114,14 +106,14 @@ return {
 				id: "/profile",
 				pattern: /^\/profile\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 16 },
+				page: { layouts: [0,], errors: [1,], leaf: 15 },
 				endpoint: null
 			},
 			{
 				id: "/protected-routes",
 				pattern: /^\/protected-routes\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 17 },
+				page: { layouts: [0,], errors: [1,], leaf: 16 },
 				endpoint: null
 			},
 			{
@@ -156,7 +148,7 @@ return {
 				id: "/welcome",
 				pattern: /^\/welcome\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 18 },
+				page: { layouts: [0,], errors: [1,], leaf: 17 },
 				endpoint: null
 			}
 		],

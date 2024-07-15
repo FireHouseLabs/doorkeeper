@@ -309,7 +309,7 @@
       "_index2.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.NsYnmf83.css"
+      "_app/immutable/assets/_layout.BnJgot0O.css"
     ]
   },
   "src/routes/+layout.ts": {
@@ -362,16 +362,8 @@
     "isEntry": true,
     "imports": [
       "_ssr.js",
-      "_SvelteToast.svelte_svelte_type_style_lang.js"
-    ]
-  },
-  "src/routes/forbidden/+page.svelte": {
-    "file": "entries/pages/forbidden/_page.svelte.js",
-    "name": "entries/pages/forbidden/_page.svelte",
-    "src": "src/routes/forbidden/+page.svelte",
-    "isEntry": true,
-    "imports": [
-      "_ssr.js"
+      "_SvelteToast.svelte_svelte_type_style_lang.js",
+      "_index2.js"
     ]
   },
   "src/routes/profile/+page.server.ts": {
