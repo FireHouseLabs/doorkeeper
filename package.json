@@ -1,6 +1,6 @@
 {
 	"name": "supabase-auth",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --open --port 5174",
@@ -12,7 +12,6 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
-		"@rollup/rollup-darwin-arm64": "^4.18.1",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/adapter-netlify": "^4.3.1",
 		"@sveltejs/kit": "^2.0.0",
