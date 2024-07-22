@@ -61,6 +61,10 @@
 				<!-- <li><a class="text-xs font-light uppercase" href="/profile">Profile</a></li> -->
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
+				{#if profile && profile.site_admin}
+               <li><a class="text-xs font-light uppercase" href="/admin/entry-logs">Logs</a></li>
+			   <li><a class="text-xs font-light uppercase" href="/admin/invite">Invite</a></li>
+            {/if}
 				<li>Version: {version}</li>
 			{/if}
 		</ul>
