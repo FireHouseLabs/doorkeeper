@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { Session } from '@supabase/supabase-js';
 	import { DoorClosed, Menu, X } from 'lucide-svelte'; // Import the necessary icons
+	import { version } from '$app/environment';
 
 	export let session: Session | null;
+	export let profile: { site_admin: boolean } | null;
 
 	let isMobileMenuOpen = false;
 
@@ -26,7 +28,11 @@
 			{#if session && session.user}
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
-				<li>v{PKG.version}</li>
+				{#if profile && profile.site_admin}
+               <li><a class="text-xs font-light uppercase" href="/admin/entry-logs">Logs</a></li>
+			   <li><a class="text-xs font-light uppercase" href="/admin/invite">Invite</a></li>
+            {/if}
+				<li>v{version}</li>
 			{/if}
 		</ul>
 	</div>
@@ -55,7 +61,7 @@
 				<!-- <li><a class="text-xs font-light uppercase" href="/profile">Profile</a></li> -->
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
-				<li>Version: {PKG.version}</li>
+				<li>Version: {version}</li>
 			{/if}
 		</ul>
 	</div>
