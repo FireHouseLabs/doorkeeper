@@ -28,7 +28,7 @@
 		method="POST"
 	>
 		<h1 class="text-2xl font-bold mb-4">Invite User</h1>
-		<p class="text-gray-600 mb-6">Enter the email address to send an invite link</p>
+		<p class="text-gray-500 mb-6">Enter the email address to send an invite link or <a href="/admin/invite-logs" class="underline">view the invite history.</a></p>
 		
 		{#if form?.message !== undefined}
 			<div class="mb-4 p-3 rounded {form?.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">

@@ -6,9 +6,8 @@ export const load = (async ({ locals: { supabase, getSession } }) => {
 	if (!session) {
 		throw redirect(303, '/login');
 	}
-	//const { data: tableData } = await supabase.from('test').select('*');
+	const { data: tableData } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
 	return {
-		user: session.user
-		//tableData
+		tableData
 	};
 }) satisfies PageServerLoad;

@@ -4,14 +4,19 @@
 	import { invalidate } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 	import type { LayoutData } from './$types';
-	import type { Subscription } from '@supabase/supabase-js';
+	import type { Subscription, SupabaseClient } from '@supabase/supabase-js';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import { SvelteToast } from '@zerodevx/svelte-toast'
 
-	export let data: LayoutData;
+	export let data: {
+    supabase: SupabaseClient | null;
+    session: import('@supabase/supabase-js').Session | null;
+    profile: { site_admin: boolean } | null;
+  };
+  
 	let subscription: Subscription;
 
-	$: ({ supabase, session } = data);
+	$: ({ supabase, session, profile } = data);
 
 	onMount(async () => {
 		if (supabase) {
@@ -21,7 +26,7 @@
 				}
 			});
 			subscription = data.subscription;
-			// console.log(session);
+			console.log(session);
 		}
 	});
 
@@ -32,6 +37,6 @@
 	});
 </script>
 
-<Navbar {session} />
+<Navbar {session} {profile} />
 <slot />
 <SvelteToast />
