@@ -42,7 +42,7 @@ export const POST = async ({ request, locals: { supabase } }) => {
 
   if (token && email) {
     console.log('Verifying OTP'); // Debug log
-    const { data, error } = await supabase.auth.verifyOtp({ email: email, token: token, type: 'signup' });
+    const { data, error } = await supabase.auth.verifyOtp({ email: email, token: token, type: 'email' });
 
     if (error) {
       console.error('OTP verification error:', error.message); // Debug log
