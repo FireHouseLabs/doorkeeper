@@ -28,6 +28,7 @@
 			bind:this={input}
 			class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
 			type="password"
+			autocomplete="current-password"
 			{name}
 			{value}
 		/>

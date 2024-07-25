@@ -1,5 +1,9 @@
 <script lang="ts" context="module">
     import { redirect } from '@sveltejs/kit';
+    import { goto } from '$app/navigation';
+    export let forbidden: boolean;
+    export let message: string;
+    export let user: any;
     
     export const load = async ({ parent }: any) => {
         const { session, supabase } = await parent();
@@ -29,12 +33,12 @@
     };
 </script>
 
-<script lang="ts">
+<!-- <script lang="ts">
     import { goto } from '$app/navigation';
     export let forbidden: boolean;
     export let message: string;
     export let user: any;
-</script>
+</script> -->
 
 {#if forbidden}
     <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">

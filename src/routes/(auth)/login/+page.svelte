@@ -4,30 +4,34 @@
 	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import BarsRotateIcon from '$lib/icons/BarsRotateIcon.svelte';
 	let isLogin = false;
+	let formErrors: { error?: string; values?: { email?: string } } = {};
 
 	function onClick() {
 		isLogin = true;
+	}
+
+	function handleFormSubmit({ result }) {
+		isLogin = false;
+		if (result.type === 'failure') {
+			formErrors = result.data.signinWithPassword ?? {};
+		} else {
+			window.location.href = '/control';
+		}
 	}
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-start p-4">
 	<form
-		use:enhance={(form) => {
-			return async ({ result }) => {
-				if (result.status == 200) {
-					isLogin = false;
-					// setTimeout(() => goto('/control', { invalidateAll: true }), 100);
-					window.location.href = '/control';
-					console.log(result);
-				} else {
-					console.log('Error during login:', result);
-				}
-			};
-		}}
+		use:enhance={(form) => async (result) => handleFormSubmit(result)}
 		class="flex w-full flex-col gap-4 lg:w-1/4"
 		action="?/login" 
 		method="POST"
 	>
+		{#if formErrors.error}
+			<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+				{formErrors.error}
+			</div>
+		{/if}
 		<div>
 			<label class="flex flex-col gap-2 text-xs" for="email">
 				<span>Email</span>
@@ -35,7 +39,9 @@
 					class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
 					type="email"
 					name="email"
+					autocomplete="email"
 					required
+					value={formErrors.values?.email ?? ''}
 				/>
 			</label>
 		</div>

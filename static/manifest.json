@@ -10,7 +10,7 @@
         {
             "src": "/favicon.png",
             "type": "image/png",
-            "sizes": "any"
+            "sizes": "16x16"
         }
     ]
 }

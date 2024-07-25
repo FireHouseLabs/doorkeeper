@@ -8,38 +8,38 @@ export const load = (async () => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	login: async ({ request, locals: { supabase } }) => {  // renamed from default to login
+	login: async ({ request, locals: { supabase } }) => {
 		const result = await getEmailandPassword(request);
 		if (isTypeAuthRequestData(result)) {
 			const { email, password } = result;
 			try {
-				const { data } = await supabase.auth.signInWithPassword({ email, password });
+				const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+				if (error) {
+					throw error;
+				}
 				return {
 					status: 200,
 					data,
 				};
 			} catch (error) {
-				console.log('Error', error);
 				if (error instanceof AuthApiError && error.status === 400) {
 					return fail(400, {
 						signinWithPassword: {
-							error: 'Invalid credentials.',
+							error: 'Invalid credentials. If you have forgotten your password, please reset it.',
 							values: {
 								email
 							}
 						}
 					});
 				}
-				if (error) {
-					return fail(500, {
-						signinWithPassword: {
-							error: 'Server error. Try again later.',
-							values: {
-								email
-							}
+				return fail(500, {
+					signinWithPassword: {
+						error: 'Server error. You may be offline, check your connection or try again later.',
+						values: {
+							email
 						}
-					});
-				}
+					}
+				});
 			}
 		}
 	}
