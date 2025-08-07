@@ -5,7 +5,6 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ locals: { getSession } }) => {
 	const session = await getSession();
 	if (!session) {
-		console.log('Access Denied');
 		throw redirect(303, '/');
 	}
 
@@ -17,7 +16,6 @@ export const load: LayoutServerLoad = async ({ locals: { getSession } }) => {
 		.single();
 
 	if (dbError || !data?.site_admin) {
-		console.log('Access Denied: User is not an admin');
 		throw error(403, 'Access Denied: You must be an administrator to access this page.');
 	}
 

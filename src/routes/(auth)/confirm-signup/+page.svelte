@@ -25,11 +25,9 @@
 			if (data) {
 				// Store the session in sessionStorage
 				sessionStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
-				console.log('Session token stored:', data.session);
 
 				// Redirect using client-side navigation
 				window.location.href = '/update-password';
-				console.log('Navigating to update-password page...');
 			}
 		} catch (error) {
 			console.error('Unexpected error during OTP validation:', error);

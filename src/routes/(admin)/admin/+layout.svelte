@@ -9,7 +9,6 @@
         const { session, supabase } = await parent();
 
         if (!session) {
-            console.log("Access Denied");
             throw redirect(303, "/");
         }
 

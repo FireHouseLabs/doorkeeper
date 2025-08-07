@@ -39,7 +39,6 @@ async function controlDoor(id: string, token: string) {
       }
   
       const data = await response.json();
-      // console.log('Door control response:', data);
       return data;
     } catch (error) {
       console.error('Error in controlDoor:', error);

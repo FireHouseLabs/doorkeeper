@@ -53,8 +53,7 @@
 
 			if (response.ok) {
 				const result = await response.json();
-				console.log('Door control result:', result);
-
+				
 				// Set selected door ID for UI feedback
 				selectedDoorId.set(doorId);
 

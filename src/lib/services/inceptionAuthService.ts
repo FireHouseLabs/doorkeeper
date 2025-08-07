@@ -5,7 +5,6 @@ let token: string | null = null;
 let lastRequestTime: number | null = null;
 
 async function authenticate() {
-    console.log('Starting authentication process');
 
     const response = await fetch('https://skytunnel.com.au/inception/IN96031349/api/v1/authentication/login', {
         method: 'POST',
@@ -28,7 +27,6 @@ async function authenticate() {
     token = data.UserID;
     lastRequestTime = Date.now();
 
-    // console.log('Authentication successful, token received:', token);
 
     return token;
 }
