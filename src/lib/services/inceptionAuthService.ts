@@ -1,6 +1,5 @@
 import { PRIVATE_INCEPTION_USERNAME, PRIVATE_INCEPTION_PASSWORD } from '$env/static/private';
 
-//const API_ROOT = 'https://skytunnel.com.au/inception/IN96031349/api/v1';
 let token: string | null = null;
 let lastRequestTime: number | null = null;
 

@@ -32,12 +32,6 @@
     };
 </script>
 
-<!-- <script lang="ts">
-    import { goto } from '$app/navigation';
-    export let forbidden: boolean;
-    export let message: string;
-    export let user: any;
-</script> -->
 
 {#if forbidden}
     <div class="flex min-h-screen items-center justify-center bg-gray-100 p-4">
