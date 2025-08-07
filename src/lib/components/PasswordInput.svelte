@@ -5,6 +5,7 @@
 
 	export let value = '';
 	export let name = 'password';
+	export let label = 'Password';
 	let passwordVisible = false;
 
 	let input: HTMLInputElement;
@@ -22,7 +23,7 @@
 
 <div class="flex w-full flex-col">
 	<label class="relative flex flex-col gap-2 text-xs" for={name}>
-		<span>Password</span>
+		<span>{label}</span>
 		<input
 			id={name}
 			bind:this={input}
