@@ -9,7 +9,7 @@
 	import { SvelteToast } from '@zerodevx/svelte-toast'
 
 	export let data: {
-    supabase: SupabaseClient | null;
+    supabase: SupabaseClient;
     session: import('@supabase/supabase-js').Session | null;
     profile: { site_admin: boolean } | null;
   };
