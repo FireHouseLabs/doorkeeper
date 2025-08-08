@@ -3,69 +3,192 @@
 	import { goto } from '$app/navigation';
 	import PasswordInput from '$lib/components/PasswordInput.svelte';
 	import BarsRotateIcon from '$lib/icons/BarsRotateIcon.svelte';
-	let isLogin = false;
-	let formErrors: { error?: string; values?: { email?: string } } = {};
+	import type { ActionData } from './$types';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
-	function onClick() {
-		isLogin = true;
-	}
+	export let form: ActionData;
 
-	function handleFormSubmit({ result }) {
-		isLogin = false;
+	// Login method toggle
+	let loginMethod: 'password' | 'otp' = 'password';
+	let isSubmitting = false;
+
+	// Check URL parameters on mount to restore state
+	onMount(() => {
+		const urlParams = $page.url.searchParams;
+		if (urlParams.get('method') === 'otp') {
+			loginMethod = 'otp';
+		}
+	});
+
+	// Form errors for different methods
+	let passwordErrors: { error?: string; values?: { email?: string } } = {};
+	let otpErrors: { error?: string; values?: { email?: string } } = {};
+
+	function handlePasswordLogin({ result }: any) {
+		isSubmitting = false;
 		if (result.type === 'failure') {
-			formErrors = result.data.signinWithPassword ?? {};
+			passwordErrors = result.data.signinWithPassword ?? {};
 		} else {
 			window.location.href = '/control';
+		}
+	}
+
+	function handleOtpSend({ result }: any) {
+		isSubmitting = false;
+		if (result.type === 'failure') {
+			otpErrors = result.data.sendOtp ?? {};
+		} else if (result.type === 'redirect') {
+			// Handle server redirect manually
+			window.location.href = result.location;
+		}
+	}
+
+	// Initialize form errors from server-side validation
+	$: if (form) {
+		console.log('Form data received:', form); // Debug log
+		if (form.signinWithPassword) {
+			passwordErrors = form.signinWithPassword;
+		} else if (form.sendOtp) {
+			otpErrors = form.sendOtp;
+		}
+	}
+
+	function switchLoginMethod(method: 'password' | 'otp') {
+		loginMethod = method;
+		passwordErrors = {};
+		otpErrors = {};
+		// Update URL to maintain state
+		if (method === 'otp') {
+			goto('/login?method=otp', { replaceState: true });
+		} else {
+			goto('/login', { replaceState: true });
 		}
 	}
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-start p-4">
-	<form
-		use:enhance={(form) => async (result) => handleFormSubmit(result)}
-		class="flex w-full flex-col gap-4 lg:w-1/4"
-		action="?/login" 
-		method="POST"
-	>
-		{#if formErrors.error}
-			<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
-				{formErrors.error}
-			</div>
-		{/if}
-		<div>
-			<label class="flex flex-col gap-2 text-xs" for="email">
-				<span>Email</span>
-				<input
-					class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
-					type="email"
-					name="email"
-					autocomplete="email"
-					required
-					value={formErrors.values?.email ?? ''}
-				/>
-			</label>
-		</div>
-		<PasswordInput />
-		<div class="my-"></div>
-		<button
-			type="submit"
-			on:click={onClick}
-			class="btn relative bg-zinc-600 px-4 py-2 text-xs uppercase text-white active:bg-zinc-400"
-		>
-			<div class="absolute flex w-full flex-col items-center">
-				{#if isLogin}
-					<BarsRotateIcon size={16} />
-				{:else}
-					Login
-				{/if}
-			</div>
-		</button>
-		<div class="flex flex-row items-center justify-center">
-			<a
-				class="text-center text-xs font-semibold tracking-tight text-green-600 hover:underline"
-				aria-label="forgot password"
-				href="reset-password">Forgot Password?</a
+	<!-- Login Method Toggle -->
+	<div class="mb-6 w-full lg:w-1/4">
+		<div class="flex rounded-lg bg-gray-100 p-1">
+			<button
+				type="button"
+				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod === 'password'
+					? 'bg-white text-gray-900 shadow-sm'
+					: 'text-gray-500 hover:text-gray-900'}"
+				on:click={() => switchLoginMethod('password')}
 			>
+				Password Login
+			</button>
+			<button
+				type="button"
+				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod === 'otp'
+					? 'bg-white text-gray-900 shadow-sm'
+					: 'text-gray-500 hover:text-gray-900'}"
+				on:click={() => switchLoginMethod('otp')}
+			>
+				Email Code Login
+			</button>
 		</div>
-	</form>
+	</div>
+
+	{#if loginMethod === 'password'}
+		<!-- Password Login Form -->
+		<form
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ result }) => handlePasswordLogin({ result });
+			}}
+			class="flex w-full flex-col gap-4 lg:w-1/4"
+			action="?/login"
+			method="POST"
+		>
+			{#if passwordErrors.error}
+				<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+					{passwordErrors.error}
+				</div>
+			{/if}
+
+			<div>
+				<label class="flex flex-col gap-2 text-xs" for="email">
+					<span>Email</span>
+					<input
+						class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
+						type="email"
+						name="email"
+						autocomplete="email"
+						required
+						value={passwordErrors.values?.email ?? ''}
+					/>
+				</label>
+			</div>
+
+			<PasswordInput />
+
+			<button
+				type="submit"
+				disabled={isSubmitting}
+				class="btn relative bg-zinc-600 px-4 py-2 text-xs uppercase text-white active:bg-zinc-400 disabled:opacity-50"
+			>
+				<div class="absolute flex w-full flex-col items-center">
+					{#if isSubmitting}
+						<BarsRotateIcon size={16} />
+					{:else}
+						Login with Password
+					{/if}
+				</div>
+			</button>
+
+			<div class="flex flex-row items-center justify-center">
+				<a
+					class="text-center text-xs font-semibold tracking-tight text-green-600 hover:underline"
+					aria-label="forgot password"
+					href="reset-password">Forgot Password?</a
+				>
+			</div>
+		</form>
+
+	{:else}
+		<!-- Email Entry for OTP -->
+		<form
+			class="flex w-full flex-col gap-4 lg:w-1/4"
+			action="?/sendOtp"
+			method="POST"
+		>
+			{#if otpErrors.error}
+				<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+					{otpErrors.error}
+				</div>
+			{/if}
+
+			<div class="mb-4 p-3 rounded text-blue-700 text-sm bg-blue-50 border border-blue-200">
+				<p class="font-medium mb-1">Email Code Login</p>
+				<p class="text-xs">Enter your email address and we'll send you a login code.</p>
+			</div>
+
+			<div>
+				<label class="flex flex-col gap-2 text-xs" for="email">
+					<span>Email</span>
+					<input
+						class="rounded bg-zinc-100 px-2 py-4 text-sm text-black focus:outline-none"
+						type="email"
+						name="email"
+						autocomplete="email"
+						required
+						value={otpErrors.values?.email ?? ''}
+					/>
+				</label>
+			</div>
+
+			<button
+				type="submit"
+				class="btn relative bg-blue-600 px-4 py-2 text-xs uppercase text-white active:bg-blue-400"
+			>
+				<div class="absolute flex w-full flex-col items-center">
+					Send Login Code
+				</div>
+			</button>
+		</form>
+
+	{/if}
 </div>

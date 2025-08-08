@@ -55,10 +55,8 @@
 			{/if}
 			{#if !session}
 				<li><a class="text-xs font-light uppercase" href="/login">Login</a></li>
-				<!-- <li><a class="text-xs font-light uppercase" href="/signup">Signup</a></li> -->
 			{/if}
 			{#if session && session.user}
-				<!-- <li><a class="text-xs font-light uppercase" href="/profile">Profile</a></li> -->
 				<li><a class="text-xs font-light uppercase" href="/logout">Logout</a></li>
 				<li><a class="text-xs font-light uppercase" href="/control">Door Control</a></li>
 				{#if profile && profile.site_admin}

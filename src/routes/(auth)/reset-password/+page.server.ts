@@ -1,6 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { AuthApiError } from '@supabase/supabase-js';
+import { failWithAuthError } from '$lib/utils/authErrorHandler';
 
 export const actions = {
 	default: async ({ locals: { supabase }, request, url }) => {
@@ -34,37 +35,24 @@ export const actions = {
 			});
 
 			if (error) {
-				// Handle specific Supabase errors
-				if (error instanceof AuthApiError) {
-					// Rate limiting or other API errors
-					if (error.status === 429) {
-						return fail(429, {
-							resetPassword: {
-								error: 'Too many requests. Please wait a minute before trying again.',
-								values: { email }
-							}
-						});
-					}
-					return fail(400, {
-						resetPassword: {
-							error: error.message || 'Failed to send reset email. Please try again.',
-							values: { email }
-						}
-					});
-				}
-				throw error; // Re-throw unknown errors
+				return failWithAuthError(
+					error, 
+					'resetPassword', 
+					'Failed to send reset email. Please try again.',
+					{ email }
+				);
 			}
 
 			// Success - redirect to confirmation page
 			redirect(303, '/email-confirm');
 		} catch (error) {
-			// Handle unexpected errors
-			return fail(500, {
-				resetPassword: {
-					error: 'Server error. Please check your connection and try again.',
-					values: { email }
-				}
-			});
+			return failWithAuthError(
+				error, 
+				'resetPassword', 
+				'Server error. Please check your connection and try again.',
+				{ email },
+				500
+			);
 		}
 	}
 } satisfies Actions;

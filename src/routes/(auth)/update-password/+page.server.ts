@@ -1,6 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { AuthApiError } from '@supabase/supabase-js';
+import { failWithAuthError } from '$lib/utils/authErrorHandler';
 
 export const load = (async ({ locals: { getSession } }) => {
 	const session = await getSession();
@@ -95,27 +96,24 @@ export const actions = {
 			const { error } = await supabase.auth.updateUser({ password });
 
 			if (error) {
-				if (error instanceof AuthApiError) {
-					return fail(400, {
-						updatePassword: {
-							error: error.message || 'Failed to update password. Please try again.',
-							values: { password: '', confirmPassword: '' }
-						}
-					});
-				}
-				throw error; // Re-throw unknown errors
+				return failWithAuthError(
+					error, 
+					'updatePassword', 
+					'Failed to update password. Please try again.',
+					{ password: '', confirmPassword: '' }
+				);
 			}
 
 			// Success - redirect to control panel
 			redirect(303, '/control');
 		} catch (error) {
-			// Handle unexpected errors
-			return fail(500, {
-				updatePassword: {
-					error: 'Server error. Please try again.',
-					values: { password: '', confirmPassword: '' }
-				}
-			});
+			return failWithAuthError(
+				error, 
+				'updatePassword', 
+				'Server error. Please try again.',
+				{ password: '', confirmPassword: '' },
+				500
+			);
 		}
 	}
 } satisfies Actions;
