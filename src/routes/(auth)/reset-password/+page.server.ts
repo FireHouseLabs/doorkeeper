@@ -30,9 +30,8 @@ export const actions = {
 		}
 
 		try {
-			const { error } = await supabase.auth.resetPasswordForEmail(email, {
-				redirectTo: `${url.origin}/api/auth/callback?next=/update-password`
-			});
+			// Use corporate-safe password reset (sends token in email, not magic link)
+			const { error } = await supabase.auth.resetPasswordForEmail(email);
 
 			if (error) {
 				return failWithAuthError(
