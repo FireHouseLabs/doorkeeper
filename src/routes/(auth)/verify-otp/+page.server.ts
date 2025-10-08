@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { failWithAuthError } from '$lib/utils/authErrorHandler';
 
 export const load = (async ({ url }) => {
 	const email = url.searchParams.get('email');
@@ -32,53 +31,42 @@ export const actions = {
 			});
 		}
 
-		try {
-			// Verify OTP using Supabase's built-in system
-			const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-				email,
-				token,
-				type: 'email'
+		// Use the same pattern as password login - let supabase handle session creation
+		const { data: authData, error } = await supabase.auth.verifyOtp({
+			email,
+			token,
+			type: 'email'
+		});
+
+		if (error) {
+			console.log('OTP verification error:', error); // Debug log
+			return fail(400, {
+				verifyOtp: {
+					error: error.message || 'Invalid verification code. Please try again.',
+					values: { email, token: '' }
+				}
 			});
-
-			if (verifyError) {
-				console.log('OTP verification error:', verifyError); // Debug log
-				console.log('Error details:', { 
-					message: verifyError.message, 
-					status: verifyError.status, 
-					code: verifyError.code 
-				});
-				return fail(400, {
-					verifyOtp: {
-						error: verifyError.message || 'Invalid verification code. Please try again.',
-						values: { email, token: '' } // Clear token on error
-					}
-				});
-			}
-
-			if (!authData.session) {
-				return fail(400, {
-					verifyOtp: {
-						error: 'Failed to create session. Please try again.',
-						values: { email, token: '' }
-					}
-				});
-			}
-
-			// OTP verification successful
-			console.log('OTP verification successful, redirecting to /control');
-
-		} catch (error) {
-			console.error('Unexpected error in verifyOtp:', error); // Debug log
-			return failWithAuthError(
-				error, 
-				'verifyOtp', 
-				'Server error. Please try again.',
-				{ email, token: '' },
-				500
-			);
 		}
 
-		// Success - redirect to control panel (outside try/catch)
-		throw redirect(303, '/control');
+		if (!authData.session) {
+			return fail(400, {
+				verifyOtp: {
+					error: 'Failed to create session. Please try again.',
+					values: { email, token: '' }
+				}
+			});
+		}
+
+		console.log('OTP verification successful - using manual session cookie approach');
+
+		// Use manual session cookie approach (same as original callback handler)
+		const { session } = authData;
+		return new Response(null, {
+			status: 303,
+			headers: {
+				'set-cookie': `session=${session.access_token}; HttpOnly; Path=/; SameSite=Lax`,
+				'location': '/control',
+			}
+		});
 	}
 } satisfies Actions;

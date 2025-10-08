@@ -19,10 +19,20 @@ export const actions = {
 				if (error) {
 					throw error;
 				}
-				return {
-					status: 200,
-					data,
-				};
+
+				if (!data.session) {
+					throw new Error('No session created');
+				}
+
+				// Use manual session cookie approach (same as original callback handler)
+				const { session } = data;
+				return new Response(null, {
+					status: 303,
+					headers: {
+						'set-cookie': `session=${session.access_token}; HttpOnly; Path=/; SameSite=Lax`,
+						'location': '/control',
+					}
+				});
 			} catch (error) {
 				return failWithAuthError(
 					error, 

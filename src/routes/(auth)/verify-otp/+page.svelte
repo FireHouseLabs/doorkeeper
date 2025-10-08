@@ -16,8 +16,9 @@
 		isSubmitting = false;
 		if (result.type === 'failure') {
 			otpErrors = result.data.verifyOtp ?? {};
-		} else if (result.type === 'redirect') {
-			window.location.href = result.location;
+		} else if (result.type === 'success') {
+			// OTP verification successful - redirect to control page
+			window.location.href = '/control';
 		}
 	}
 

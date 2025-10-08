@@ -1,4 +1,4 @@
-import { redirect, json } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 // Modern PKCE auth callback - handles email confirmation and password reset flows
 export const GET = async ({ url, locals: { supabase } }) => {
@@ -17,34 +17,37 @@ export const GET = async ({ url, locals: { supabase } }) => {
 	throw redirect(303, '/auth-code-error');
 };
 
-// Corporate-safe password reset token validation (for /verify page)
+// Corporate-safe password reset token validation (for /verify page) - RESTORED ORIGINAL
 export const POST = async ({ request, locals: { supabase } }) => {
-	try {
-		const { email, token } = await request.json();
-		
-		if (!email || !token) {
-			return json({ error: 'Email and token are required' }, { status: 400 });
-		}
+	console.log('POST request received'); // Debug log
+	const { email: encodedEmail, token } = await request.json();
+	const email = decodeURIComponent(encodedEmail);
+	console.log('Received email:', email, 'Received token:', token); // Debug log
+	const next = '/update-password';
 
-		// Use Supabase's verifyOtp to validate the reset token
-		const { data, error } = await supabase.auth.verifyOtp({
-			email: decodeURIComponent(email),
-			token,
-			type: 'recovery'
-		});
+	if (token && email) {
+		console.log('Verifying OTP'); // Debug log
+		const { data, error } = await supabase.auth.verifyOtp({ email: email, token: token, type: 'email' });
 
 		if (error) {
-			console.log('Token verification error:', error);
-			return json({ error: 'Invalid or expired token' }, { status: 400 });
+			console.error('OTP verification error:', error.message); // Debug log
+		} else {
+			console.log('OTP verification data:', data); // Debug log
 		}
 
-		if (!data.session) {
-			return json({ error: 'Failed to create session' }, { status: 400 });
+		if (!error && data && data.session) {
+			const { session } = data;
+			return new Response(null, {
+				status: 303,
+				headers: {
+					'set-cookie': `session=${session.access_token}; HttpOnly; Path=/; SameSite=Lax`,
+					'location': next,
+				}
+			});
 		}
-
-		return json({ success: true });
-	} catch (error) {
-		console.error('POST callback error:', error);
-		return json({ error: 'Server error' }, { status: 500 });
 	}
+
+	// Redirect to an error page if OTP validation fails
+	console.log('OTP validation failed or missing data'); // Debug log
+	throw redirect(303, '/auth-code-error');
 };
