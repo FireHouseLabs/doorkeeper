@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load = (async ({ url }) => {
 	const email = url.searchParams.get('email');
-	
+
 	// If no email in URL, redirect to login
 	if (!email) {
 		redirect(302, '/login');
@@ -19,7 +19,7 @@ export const actions = {
 		const data = await request.formData();
 		const email = String(data.get('email')).trim();
 		const token = String(data.get('token')).trim();
-		
+
 		console.log('Verifying OTP:', { email, token, tokenLength: token.length }); // Debug log
 
 		if (!email || !token) {
@@ -57,16 +57,8 @@ export const actions = {
 			});
 		}
 
-		console.log('OTP verification successful - using manual session cookie approach');
+		console.log('OTP verification successful');
 
-		// Use manual session cookie approach (same as original callback handler)
-		const { session } = authData;
-		return new Response(null, {
-			status: 303,
-			headers: {
-				'set-cookie': `session=${session.access_token}; HttpOnly; Path=/; SameSite=Lax`,
-				'location': '/control',
-			}
-		});
+		throw redirect(303, '/control');
 	}
 } satisfies Actions;

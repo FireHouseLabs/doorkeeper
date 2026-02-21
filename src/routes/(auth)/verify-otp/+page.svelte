@@ -8,7 +8,7 @@
 
 	// Get email from URL parameters
 	const email = $page.url.searchParams.get('email') || '';
-	
+
 	let isSubmitting = false;
 	let otpErrors: { error?: string; values?: { email?: string; token?: string } } = {};
 
@@ -16,9 +16,8 @@
 		isSubmitting = false;
 		if (result.type === 'failure') {
 			otpErrors = result.data.verifyOtp ?? {};
-		} else if (result.type === 'success') {
-			// OTP verification successful - redirect to control page
-			window.location.href = '/control';
+		} else if (result.type === 'redirect') {
+			window.location.href = result.location;
 		}
 	}
 
@@ -38,7 +37,7 @@
 <div class="flex h-full w-full flex-col items-center justify-start p-4">
 	<div class="w-full lg:w-1/3">
 		<div class="mb-6 text-center">
-			<h1 class="text-2xl font-semibold text-gray-900 mb-2">Enter Login Code</h1>
+			<h1 class="mb-2 text-2xl font-semibold text-gray-900">Enter Login Code</h1>
 			<p class="text-sm text-gray-600">We sent a 6-digit code to your email</p>
 		</div>
 
@@ -52,15 +51,15 @@
 			method="POST"
 		>
 			<input type="hidden" name="email" value={email} />
-			
+
 			{#if otpErrors.error}
-				<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+				<div class="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
 					{otpErrors.error}
 				</div>
 			{/if}
 
-			<div class="mb-4 p-3 rounded text-blue-700 text-sm bg-blue-50 border border-blue-200">
-				<p class="font-medium mb-1">Check Your Email</p>
+			<div class="mb-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+				<p class="mb-1 font-medium">Check Your Email</p>
 				<p class="text-xs">We sent a login code to <strong>{email}</strong></p>
 			</div>
 
@@ -68,7 +67,7 @@
 				<label class="flex flex-col gap-2 text-xs" for="token">
 					<span>Enter 6-digit code from email</span>
 					<input
-						class="rounded bg-zinc-100 px-4 py-4 text-lg text-black focus:outline-none text-center tracking-widest font-mono"
+						class="rounded bg-zinc-100 px-4 py-4 text-center font-mono text-lg tracking-widest text-black focus:outline-none"
 						type="text"
 						name="token"
 						placeholder="000000"
@@ -85,7 +84,7 @@
 			<button
 				type="submit"
 				disabled={isSubmitting}
-				class="btn relative bg-green-600 px-4 py-4 text-sm font-medium uppercase text-white active:bg-green-400 disabled:opacity-50 rounded"
+				class="btn relative rounded bg-green-600 px-4 py-4 text-sm font-medium uppercase text-white active:bg-green-400 disabled:opacity-50"
 			>
 				<div class="absolute flex w-full flex-col items-center">
 					{#if isSubmitting}
@@ -96,7 +95,7 @@
 				</div>
 			</button>
 
-			<div class="flex flex-row items-center justify-center gap-4 mt-4">
+			<div class="mt-4 flex flex-row items-center justify-center gap-4">
 				<button
 					type="button"
 					class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
