@@ -10,17 +10,17 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 	// Create browser client with simplified configuration
 	const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
 		global: {
-			fetch,
+			fetch
 		},
 		cookies: {
-			get(key) {
+			get(key: string) {
 				if (!browser) {
 					return null;
 				}
 				// Simple cookie parsing for browser environment
 				const cookies = document.cookie
 					.split('; ')
-					.find(row => row.startsWith(`${key}=`))
+					.find((row) => row.startsWith(`${key}=`))
 					?.split('=')[1];
 				return cookies || null;
 			}

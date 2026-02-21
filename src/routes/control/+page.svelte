@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { DOOR_GUIDS } from '$lib/common/constants';
 	import { onMount } from 'svelte';
-	import { checkLocationProximity } from '$lib/services/locationService';
+	import { checkLocationProximity, getUserLocation } from '$lib/services/locationService';
 	import { DoorOpen, Warehouse } from 'lucide-svelte';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { writable } from 'svelte/store';
@@ -9,7 +9,7 @@
 	import Notification from '$lib/components/Notification.svelte';
 
 	let isLocationValid = false;
-	let userLocation = null; // To store user's current location
+	let userLocation: { latitude: number; longitude: number } | null = null; // To store user's current location
 	let userLocationError = ''; // To store error message
 
 	// Success Location
@@ -22,9 +22,14 @@
 
 	onMount(async () => {
 		try {
+			userLocation = await getUserLocation();
 			isLocationValid = await checkLocationProximity(targetLocation, maxDistance);
+			if (!isLocationValid) {
+				userLocationError = 'You are not within range of Moorooduc Fire Station.';
+			}
 		} catch (error) {
 			console.error('Error checking location proximity:', error);
+			userLocationError = 'Could not determine your location.';
 		}
 	});
 
@@ -35,6 +40,7 @@
 	];
 
 	export let data;
+	export let form;
 
 	const selectedDoorId = writable<string | null>(null);
 
@@ -74,14 +80,16 @@
 					response.statusText,
 					errorText
 				);
-				toast.error(`Failed to control the door: ${response.statusText}`, {
-					duration: 5000
+				toast.push(`Failed to control the door: ${response.statusText}`, {
+					duration: 5000,
+					classes: ['error']
 				});
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error controlling door:', error);
-			toast.error(`Error: ${error.message}`, {
-				duration: 5000
+			toast.push(`Error: ${error.message}`, {
+				duration: 5000,
+				classes: ['error']
 			});
 		}
 	}
@@ -100,7 +108,7 @@
 					class="
                 focus:shadow-outline rounded-lg bg-blue-500 px-6 py-9 font-bold text-white shadow-lg
                 transition-colors duration-300 hover:bg-blue-700 focus:outline-none
-                {id === selectedDoorId ? 'bg-green-500' : ''}
+                {id === $selectedDoorId ? 'bg-green-500' : ''}
             "
 					on:click={(event) => handleSubmit(event, id, name)}
 				>
@@ -111,11 +119,11 @@
 		</div>
 	</div>
 	<Notification />
-	{#if data?.success}
+	{#if form?.success}
 		<p>Door opened successfully!</p>
 	{/if}
-	{#if data?.error}
-		<p>{data.error}</p>
+	{#if form?.error}
+		<p>{form.error}</p>
 	{/if}
 {:else}
 	<div class="flex min-h-screen items-center justify-center">

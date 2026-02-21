@@ -5,17 +5,17 @@ import type { Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
 		cookies: {
-			get: (key) => event.cookies.get(key),
+			get: (key: string) => event.cookies.get(key),
 			/**
 			 * Note: You have to add the `path` variable to the
 			 * set and remove method due to sveltekit's cookie API
 			 * requiring this to be set, setting the path to an empty string
 			 * will replicate previous/standard behaviour (https://kit.svelte.dev/docs/types#public-types-cookies)
 			 */
-			set: (key, value, options) => {
+			set: (key: string, value: string, options: any) => {
 				event.cookies.set(key, value, { ...options, path: '/' });
 			},
-			remove: (key, options) => {
+			remove: (key: string, options: any) => {
 				event.cookies.delete(key, { ...options, path: '/' });
 			}
 		}

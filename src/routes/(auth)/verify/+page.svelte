@@ -7,8 +7,8 @@
     onMount(() => {
       // Get the email and token from URL parameters
       const params = new URLSearchParams(window.location.search);
-      email = params.get('email');
-      token = params.get('token');
+      email = params.get('email') ?? '';
+      token = params.get('token') ?? '';
     });
   
     const handleSubmit = async () => {
