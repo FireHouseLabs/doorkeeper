@@ -10,7 +10,7 @@
 	export let form: ActionData;
 
 	// Login method toggle
-	let loginMethod: 'password' | 'otp' = 'password';
+	let loginMethod: 'password' | 'otp' = 'otp';
 	let isSubmitting = false;
 
 	// Check URL parameters on mount to restore state
@@ -73,7 +73,8 @@
 		<div class="flex rounded-lg bg-gray-100 p-1">
 			<button
 				type="button"
-				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod === 'password'
+				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod ===
+				'password'
 					? 'bg-white text-gray-900 shadow-sm'
 					: 'text-gray-500 hover:text-gray-900'}"
 				on:click={() => switchLoginMethod('password')}
@@ -82,12 +83,13 @@
 			</button>
 			<button
 				type="button"
-				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod === 'otp'
+				class="flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors {loginMethod ===
+				'otp'
 					? 'bg-white text-gray-900 shadow-sm'
 					: 'text-gray-500 hover:text-gray-900'}"
 				on:click={() => switchLoginMethod('otp')}
 			>
-				Email Code Login
+				Magic Link
 			</button>
 		</div>
 	</div>
@@ -104,7 +106,7 @@
 			method="POST"
 		>
 			{#if passwordErrors.error}
-				<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+				<div class="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
 					{passwordErrors.error}
 				</div>
 			{/if}
@@ -147,22 +149,17 @@
 				>
 			</div>
 		</form>
-
 	{:else}
 		<!-- Email Entry for OTP -->
-		<form
-			class="flex w-full flex-col gap-4 lg:w-1/4"
-			action="?/sendOtp"
-			method="POST"
-		>
+		<form class="flex w-full flex-col gap-4 lg:w-1/4" action="?/sendOtp" method="POST">
 			{#if otpErrors.error}
-				<div class="mb-4 p-3 rounded text-red-700 text-sm bg-red-100">
+				<div class="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
 					{otpErrors.error}
 				</div>
 			{/if}
 
-			<div class="mb-4 p-3 rounded text-blue-700 text-sm bg-blue-50 border border-blue-200">
-				<p class="font-medium mb-1">Email Code Login</p>
+			<div class="mb-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+				<p class="mb-1 font-medium">Magic Link Login</p>
 				<p class="text-xs">Enter your email address and we'll send you a login code.</p>
 			</div>
 
@@ -184,11 +181,8 @@
 				type="submit"
 				class="btn relative bg-blue-600 px-4 py-2 text-xs uppercase text-white active:bg-blue-400"
 			>
-				<div class="absolute flex w-full flex-col items-center">
-					Send Login Code
-				</div>
+				<div class="absolute flex w-full flex-col items-center">Send Login Code</div>
 			</button>
 		</form>
-
 	{/if}
 </div>
