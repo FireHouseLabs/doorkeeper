@@ -7,7 +7,7 @@ import type { LayoutLoad } from './$types';
 export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 	depends('supabase:auth');
 
-	// Create browser client with simplified configuration
+	// Create browser client with proper cookie handling
 	const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
 		global: {
 			fetch
@@ -17,12 +17,35 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 				if (!browser) {
 					return null;
 				}
-				// Simple cookie parsing for browser environment
-				const cookies = document.cookie
+				const cookie = document.cookie
 					.split('; ')
 					.find((row) => row.startsWith(`${key}=`))
 					?.split('=')[1];
-				return cookies || null;
+				return cookie || null;
+			},
+			set(key: string, value: string, options: any) {
+				if (!browser) return;
+				let cookieStr = `${key}=${value}; path=${options?.path || '/'}`;
+				if (options?.maxAge) {
+					cookieStr += `; max-age=${options.maxAge}`;
+				}
+				if (options?.domain) {
+					cookieStr += `; domain=${options.domain}`;
+				}
+				if (options?.secure) {
+					cookieStr += '; secure';
+				}
+				if (options?.sameSite) {
+					cookieStr += `; samesite=${options.sameSite}`;
+				}
+				if (options?.httpOnly) {
+					cookieStr += '; httponly';
+				}
+				document.cookie = cookieStr;
+			},
+			remove(key: string, options: any) {
+				if (!browser) return;
+				document.cookie = `${key}=; path=${options?.path || '/'}; max-age=0`;
 			}
 		}
 	});

@@ -13,9 +13,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 			 * will replicate previous/standard behaviour (https://kit.svelte.dev/docs/types#public-types-cookies)
 			 */
 			set: (key: string, value: string, options: any) => {
-				event.cookies.set(key, value, { ...options, path: '/' });
+				console.log('[Hooks] Setting cookie:', key, 'options:', options);
+				event.cookies.set(key, value, {
+					...options,
+					path: '/',
+					httpOnly: true,
+					secure: false, // Set to true in production
+					sameSite: 'lax'
+				});
 			},
 			remove: (key: string, options: any) => {
+				console.log('[Hooks] Removing cookie:', key);
 				event.cookies.delete(key, { ...options, path: '/' });
 			}
 		}
@@ -27,9 +35,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	 * you just call this `await getSession()`
 	 */
 	event.locals.getSession = async () => {
+		// Debug: log all cookies
+		console.log(
+			'[Hooks] Cookie keys:',
+			event.cookies.getAll().map((c) => c.name)
+		);
+
 		const {
-			data: { session }
+			data: { session },
+			error
 		} = await event.locals.supabase.auth.getSession();
+		if (error) {
+			console.error('[Hooks] Error getting session:', error);
+		}
+		console.log('[Hooks] Session found:', !!session);
 		return session;
 	};
 

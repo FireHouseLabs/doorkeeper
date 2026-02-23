@@ -20,23 +20,16 @@ export const actions = {
 					throw error;
 				}
 
-				if (!data.session) {
+				// Ensure session is established before redirect
+				if (data.session) {
+					throw redirect(303, '/control');
+				} else {
 					throw new Error('No session created');
 				}
-
-				// Use manual session cookie approach (same as original callback handler)
-				const { session } = data;
-				return new Response(null, {
-					status: 303,
-					headers: {
-						'set-cookie': `session=${session.access_token}; HttpOnly; Path=/; SameSite=Lax`,
-						'location': '/control',
-					}
-				});
 			} catch (error) {
 				return failWithAuthError(
-					error, 
-					'signinWithPassword', 
+					error,
+					'signinWithPassword',
 					'Login failed. Please check your credentials or try again later.',
 					{ email }
 				);
@@ -58,7 +51,7 @@ export const actions = {
 	// Corporate-email friendly OTP - sends numeric code only
 	sendOtp: async ({ request, locals: { supabase }, url }) => {
 		console.log('sendOtp action called'); // Debug log
-		
+
 		const data = await request.formData();
 		const email = String(data.get('email')).trim();
 		console.log('Email received:', email); // Debug log
@@ -97,8 +90,8 @@ export const actions = {
 			if (emailError) {
 				console.log('Email error:', emailError); // Debug log
 				return failWithAuthError(
-					emailError, 
-					'sendOtp', 
+					emailError,
+					'sendOtp',
 					'Failed to send login code. Please try again.',
 					{ email }
 				);
@@ -108,8 +101,8 @@ export const actions = {
 		} catch (error) {
 			console.error('Unexpected error in sendOtp:', error); // Debug log
 			return failWithAuthError(
-				error, 
-				'sendOtp', 
+				error,
+				'sendOtp',
 				'Server error. Please check your connection and try again.',
 				{ email: '' },
 				500
@@ -118,8 +111,7 @@ export const actions = {
 
 		// Success - redirect to dedicated OTP verification page (outside try/catch)
 		throw redirect(303, `/verify-otp?email=${encodeURIComponent(email)}`);
-	},
-
+	}
 } satisfies Actions;
 
 type AuthRequestData = {

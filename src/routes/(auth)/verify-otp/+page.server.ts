@@ -15,7 +15,7 @@ export const load = (async ({ url }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
-	verifyOtp: async ({ request, locals: { supabase } }) => {
+	verifyOtp: async ({ request, locals: { supabase, getSession } }) => {
 		const data = await request.formData();
 		const email = String(data.get('email')).trim();
 		const token = String(data.get('token')).trim();
@@ -31,7 +31,7 @@ export const actions = {
 			});
 		}
 
-		// Use the same pattern as password login - let supabase handle session creation
+		// Verify OTP
 		const { data: authData, error } = await supabase.auth.verifyOtp({
 			email,
 			token,
@@ -59,6 +59,7 @@ export const actions = {
 
 		console.log('OTP verification successful');
 
-		throw redirect(303, '/control');
+		// Redirect to control page - cookies should be set by hooks.server.ts
+		throw redirect(302, '/control');
 	}
 } satisfies Actions;
