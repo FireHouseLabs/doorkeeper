@@ -4,73 +4,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DoorKeeper is a SvelteKit application that serves as a wrapper for the Inner Range SkyCommand API, providing a user-friendly replacement for the IR SkyCommand App for basic access control. The app uses Supabase for authentication with email-based auth using PKCE flow for SSR.
+DoorKeeper is a SvelteKit 2 / Svelte 4 app that wraps the Inner Range Inception (SkyCommand) API to give brigade members a simple door-opening UI. Supabase provides auth (email/password + OTP, PKCE flow for SSR) and stores profiles and audit logs. It deploys to Netlify.
 
-## Development Commands
+## Commands
 
 ```bash
-# Development server (opens on port 5174)
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
+npm run dev          # vite dev --open --port 5174
+npm run build        # vite build -> build/
 npm run preview
-
-# Type checking
-npm run check
-
-# Type checking with watch mode
+npm run check        # svelte-kit sync && svelte-check (the only "test" available)
 npm run check:watch
-
-# Linting and formatting
-npm run lint
-npm run format
+npm run lint         # prettier --check . && eslint .
+npm run format       # prettier --write .
 ```
+
+There is **no test framework** in this project. `npm run check` is the closest thing to a test suite — it currently passes with 0 errors and 5 warnings, so treat any new error as a regression.
+
+See `AGENTS.md` for the code style contract (tabs, single quotes, no trailing commas, 100 cols, import ordering, `satisfies` on load/actions, component script section order). Don't duplicate that guidance here.
+
+## Environment Variables
+
+```bash
+PUBLIC_SUPABASE_URL
+PUBLIC_SUPABASE_ANON_KEY
+PUBLIC_SUPABASE_SERVICE_KEY     # service role key — see warning below
+PUBLIC_SITE_LATITUDE            # site coords for the proximity check
+PUBLIC_SITE_LONGITUDE
+
+PRIVATE_INCEPTION_USERNAME
+PRIVATE_INCEPTION_PASSWORD
+PRIVATE_INCEPTION_SERIAL
+PRIVATE_INCEPTION_BASE_URL      # e.g. https://skytunnel.com.au/inception/<serial>
+```
+
+⚠️ The Supabase **service role key is stored under a `PUBLIC_` prefix**, so Vite inlines it and it is reachable from client bundles. It is currently read in `serviceSupabase.ts`, `(admin)/admin/invite`, and `(admin)/admin/users`. Do not add new `PUBLIC_SUPABASE_SERVICE_KEY` usages; if you touch this area, migrate it to `$env/static/private` (`PRIVATE_SUPABASE_SERVICE_KEY`) rather than propagating the pattern.
 
 ## Architecture
 
-### Authentication Flow
-- Uses Supabase SSR with @supabase/ssr package
-- Server-side authentication handled in `src/hooks.server.ts`
-- Session management through SvelteKit locals
-- Email confirmation flow with API endpoint at `/api/auth/callback`
+### Three Supabase clients — pick deliberately
 
-### Route Structure
-- `(auth)/*` - Authentication-related pages (login, signup, password reset, etc.)
-- `(admin)/*` - Admin-only pages with entry logs, invite logs, and user invite functionality
-- `control/` - Main access control interface
-- `protected-routes/` - Example protected content area
+This is the single most important thing to understand before editing server code. The codebase has three distinct clients and they are **not** interchangeable:
 
-### Key Components
-- Authentication state managed through `src/routes/+layout.server.ts`
-- Supabase client configuration in `src/lib/supabaseClient.ts`
-- Server hooks handle cookie-based session management
-- Type definitions extend SvelteKit's App namespace for Supabase integration
+1. **`locals.supabase`** — created per-request in `src/hooks.server.ts` via `createServerClient` with cookie get/set/remove. This is the only client bound to the caller's session. Use it for anything acting *as the user* (sign in, sign up, OTP, password reset). `locals.getSession()` is the convenience wrapper.
+2. **`$lib/supabaseClient`** — a module-level anon client with **no session attached**. Used today for `entry_logs` / `invite_logs` inserts and `profiles` reads/writes. Anything written through it runs as anon and depends entirely on permissive RLS — this is why admin checks and audit inserts work without a user JWT.
+3. **`serviceSupabase` (`$lib/utils/serviceSupabase.ts`)** and the ad-hoc `createClient(url, PUBLIC_SUPABASE_SERVICE_KEY)` calls in the admin routes — service role, bypasses RLS. Needed for `auth.admin.*` operations (invite, listUsers, deleteUser) and the `otp_codes` table.
 
-### Services
-- `inceptionAuthService.ts` - Handles integration with Inner Range SkyCommand API
-- `locationService.ts` - Location-based functionality
+Client-side, `src/routes/+layout.ts` builds a `createBrowserClient` with hand-rolled `document.cookie` handling and exposes it as `data.supabase`.
 
-### Styling
-- TailwindCSS with DaisyUI components
-- PostCSS configuration for processing
-- Custom icons in `src/lib/icons/`
+### Auth flows (there are several, overlapping)
 
-## Environment Setup
+- **Password login** — `(auth)/login` `login` action → `signInWithPassword` → redirect `/control`.
+- **OTP code login** — `(auth)/login` `sendOtp` action → `signInWithOtp({ shouldCreateUser: false })` → redirect to `/verify-otp?email=…`. Built because corporate mail scanners (Mimecast) consume magic-link tokens; see `CORPORATE_EMAIL_SETUP.md`.
+- **PKCE email callback** — `GET /api/auth/callback` exchanges `?code` for a session (`exchangeCodeForSession`) and redirects to `?next`. Failures land on `/auth-code-error`.
+- **Legacy password-reset token check** — `POST /api/auth/callback` calls `verifyOtp` and then **sets a `session` cookie by hand**, which fights `@supabase/ssr`'s cookie management. This is a known defect (Task 1 in `IMPROVEMENT_TASKS.md`), not a pattern to copy.
+- **Custom OTP table** — `$lib/utils/customOtp.ts` + the `otp_codes` table (`supabase_otp_table.sql`) implement a self-managed 6-digit code path. It is currently **not wired into the login route**; check before assuming it runs.
 
-Required environment variables:
-```bash
-PUBLIC_SUPABASE_URL=your_supabase_project_url
-PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+`hooks.server.ts` sets `secure: false` on session cookies with a "set to true in production" comment — still unresolved.
 
-## Database Types
-- TypeScript definitions should be maintained in `src/DatabaseDefinitions.ts`
-- Database types are exported through `src/app.d.ts`
+### Authorisation
 
-## Deployment
-- Configured for Netlify deployment via `@sveltejs/adapter-netlify`
-- Build outputs to `build/` directory
-- Static assets served from `static/`
+- Session guard: every protected `+page.server.ts` `load` calls `locals.getSession()` and redirects to `/login` (or `/`) when null. There is no global guard in hooks — a new protected route must add its own check.
+- Admin guard: `(admin)/admin/+layout.server.ts` reads `profiles.site_admin` and `error(403, …)` if false. `src/routes/+layout.server.ts` separately fetches the same flag so the navbar can show admin links.
+
+### Door control path
+
+`control/+page.server.ts` is the core of the app:
+
+1. `inceptionAuthService.authenticate()` POSTs `PRIVATE_INCEPTION_USERNAME`/`PASSWORD` to the Inception login endpoint and caches the returned `UserID` in a **module-level variable with a 10-minute TTL** (`getToken()`). Note: the login URL there is hard-coded with the site serial, while door control uses `PRIVATE_INCEPTION_BASE_URL` — they can drift.
+2. The token is sent to Inception as a `Cookie: LoginSessId=<token>` header on `POST {base}/api/v1/control/door/{id}/activity` with `{ Type: 'ControlDoor', DoorControlType: 'Open' }`.
+3. Both success and failure insert a row into `entry_logs` (user id, email, door name/id, `status` boolean) via the anon client.
+
+Door GUIDs are hard-coded in `src/lib/common/constants.ts` (`DOOR_GUIDS`) and mapped to labels/icons in `control/+page.svelte`.
+
+⚠️ The geofence (`$lib/services/locationService.ts`, haversine distance vs `PUBLIC_SITE_*` coords, 5000 m radius) runs **only in the browser** in `control/+page.svelte`. The `control` action performs no proximity check, so the geofence is UX, not security. Keep that in mind before describing it as an access control.
+
+### Supabase tables in use
+
+`profiles` (`id`, `email`, `site_admin`), `entry_logs`, `invite_logs` (`invited_address`, `invited_by`), `otp_codes`. Only `otp_codes` has committed DDL (`supabase_otp_table.sql`); the rest live only in the hosted project.
+
+`src/app.d.ts` imports `Database` from `./DatabaseDefinitions`, **but that file does not exist**, so `SupabaseClient<Database>` gives no real table typing. Creating `src/DatabaseDefinitions.ts` (Supabase-generated types) would light up type checking across every query.
+
+### Misc
+
+- Version display: `svelte.config.js` and `vite.config.ts` both read `package.json` at build time — `version.name` for SvelteKit and a `PKG` define for the app. Bump `package.json` `version` when you want the UI's version string to change.
+- `src/service-worker/index.js` exists but is *not* at `src/service-worker.ts`, so SvelteKit does not auto-register it.
+- Reference docs in the repo: `IMPROVEMENT_TASKS.md` (known defects with file:line), `CORPORATE_EMAIL_SETUP.md`, `EMAIL_TEMPLATES.md` (Supabase dashboard email templates that must match `/api/auth/callback`).
