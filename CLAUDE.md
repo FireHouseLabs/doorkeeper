@@ -30,6 +30,8 @@ PUBLIC_SUPABASE_ANON_KEY
 PUBLIC_SUPABASE_SERVICE_KEY     # service role key — see warning below
 PUBLIC_SITE_LATITUDE            # site coords for the proximity check
 PUBLIC_SITE_LONGITUDE
+PUBLIC_SITE_RADIUS_METRES       # geofence radius, defaults to 300 if unset-but-invalid
+PUBLIC_SITE_MAX_ACCURACY_METRES # reject vaguer fixes than this, defaults to 100
 
 PRIVATE_INCEPTION_USERNAME
 PRIVATE_INCEPTION_PASSWORD
@@ -76,7 +78,12 @@ Client-side, `src/routes/+layout.ts` builds a `createBrowserClient` with hand-ro
 
 Door GUIDs are hard-coded in `src/lib/common/constants.ts` (`DOOR_GUIDS`) and mapped to labels/icons in `control/+page.svelte`.
 
-⚠️ The geofence (`$lib/services/locationService.ts`, haversine distance vs `PUBLIC_SITE_*` coords, 5000 m radius) runs **only in the browser** in `control/+page.svelte`. The `control` action performs no proximity check, so the geofence is UX, not security. Keep that in mind before describing it as an access control.
+The geofence is enforced in **both** places, and the shared maths lives in `$lib/common/geo.ts`: `calculateDistance`, plus `SITE_MAX_DISTANCE_METRES` and `MAX_LOCATION_ACCURACY_METRES`, which are read from `PUBLIC_SITE_RADIUS_METRES` / `PUBLIC_SITE_MAX_ACCURACY_METRES` so the fence can be tuned per environment without a code change (falling back to 300 m / 100 m on a missing or invalid value). Note the dev `.env` typically points the site coords at a developer's own location, so **the denial path never fires locally** — change a coord to test it.
+
+- `control/+page.svelte` checks proximity on mount to decide whether to render the door buttons, and sends a fresh fix (`latitude`, `longitude`, `accuracy`) with every open request. This half is UX.
+- `checkReportedLocation()` in `control/+page.server.ts` re-runs the check on those reported values and `fail(403)`s before touching Inception. It also rejects vague fixes (`accuracy` > 100 m) and implausible jumps between a user's consecutive reports, tracked in a module-level `Map` (best-effort — empty on cold start, not shared across serverless instances). Denied attempts are written to `entry_logs` with `status: false`.
+
+⚠️ The browser still supplies the coordinates, so a caller who spoofs their position passes both checks. This raises the cost of a bypass and creates an audit trail; it is **not** proof of presence. Don't describe it as a hard access control — the real boundary is who holds a Supabase account. A network- or hardware-based proximity factor isn't available at this site.
 
 ### Supabase tables in use
 

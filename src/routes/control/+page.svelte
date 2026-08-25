@@ -1,15 +1,21 @@
 <script lang="ts">
-	import { DOOR_GUIDS } from '$lib/common/constants';
+	import { deserialize } from '$app/forms';
 	import { onMount } from 'svelte';
-	import { checkLocationProximity, getUserLocation } from '$lib/services/locationService';
 	import { DoorOpen, Warehouse } from 'lucide-svelte';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { writable } from 'svelte/store';
+	import { DOOR_GUIDS } from '$lib/common/constants';
+	import {
+		MAX_LOCATION_ACCURACY_METRES,
+		SITE_MAX_DISTANCE_METRES,
+		calculateDistance
+	} from '$lib/common/geo';
+	import { getUserLocation, type UserPosition } from '$lib/services/locationService';
 	import { PUBLIC_SITE_LATITUDE, PUBLIC_SITE_LONGITUDE } from '$env/static/public';
 	import Notification from '$lib/components/Notification.svelte';
 
 	let isLocationValid = false;
-	let userLocation: { latitude: number; longitude: number } | null = null; // To store user's current location
+	let userLocation: UserPosition | null = null; // To store user's current location
 	let userLocationError = ''; // To store error message
 
 	// Success Location
@@ -18,14 +24,30 @@
 		longitude: Number(PUBLIC_SITE_LONGITUDE) // Set in environment variable for now so location is always secret
 	};
 
-	const maxDistance = 5000; // Maximum distance in meters
-
 	onMount(async () => {
 		try {
 			userLocation = await getUserLocation();
-			isLocationValid = await checkLocationProximity(targetLocation, maxDistance);
+			if (!userLocation) {
+				userLocationError = 'Could not determine your location.';
+				return;
+			}
+
+			const distance = calculateDistance(
+				userLocation.latitude,
+				userLocation.longitude,
+				targetLocation.latitude,
+				targetLocation.longitude
+			);
+
+			isLocationValid =
+				distance <= SITE_MAX_DISTANCE_METRES &&
+				userLocation.accuracy <= MAX_LOCATION_ACCURACY_METRES;
+
 			if (!isLocationValid) {
-				userLocationError = 'You are not within range of Moorooduc Fire Station.';
+				userLocationError =
+					userLocation.accuracy > MAX_LOCATION_ACCURACY_METRES
+						? 'Your location is not accurate enough to confirm you are at the station.'
+						: 'You are not within range of Moorooduc Fire Station.';
 			}
 		} catch (error) {
 			console.error('Error checking location proximity:', error);
@@ -47,9 +69,25 @@
 	async function handleSubmit(event: Event, doorId: string, doorName: string) {
 		event.preventDefault();
 
+		// Send a current fix with the request. The server repeats this check and is the only thing
+		// that actually gates the door — the branch below is UX.
+		const position = await getUserLocation(30000);
+		if (!position) {
+			toast.push('Could not confirm your location. Allow location access and try again.', {
+				duration: 5000,
+				classes: ['error']
+			});
+			return;
+		}
+
+		userLocation = position;
+
 		const formData = new FormData();
 		formData.append('doorId', doorId);
 		formData.append('doorName', doorName); // Include the door name
+		formData.append('latitude', String(position.latitude));
+		formData.append('longitude', String(position.longitude));
+		formData.append('accuracy', String(position.accuracy));
 
 		try {
 			const response = await fetch('?/control', {
@@ -57,9 +95,9 @@
 				body: formData
 			});
 
-			if (response.ok) {
-				const result = await response.json();
-				
+			const result = deserialize<{ result?: unknown }, { error?: string }>(await response.text());
+
+			if (result.type === 'success') {
 				// Set selected door ID for UI feedback
 				selectedDoorId.set(doorId);
 
@@ -72,19 +110,19 @@
 					duration: 5000,
 					classes: ['success']
 				});
-			} else {
-				const errorText = await response.text();
-				console.error(
-					'Failed to control the door:',
-					response.status,
-					response.statusText,
-					errorText
-				);
-				toast.push(`Failed to control the door: ${response.statusText}`, {
-					duration: 5000,
-					classes: ['error']
-				});
+				return;
 			}
+
+			const message =
+				(result.type === 'failure' ? result.data?.error : undefined) ??
+				(result.type === 'error' ? result.error.message : undefined) ??
+				'Failed to control the door.';
+
+			console.error('Failed to control the door:', response.status, message);
+			toast.push(message, {
+				duration: 5000,
+				classes: ['error']
+			});
 		} catch (error: any) {
 			console.error('Error controlling door:', error);
 			toast.push(`Error: ${error.message}`, {
