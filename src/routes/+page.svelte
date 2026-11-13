@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 
-	//export let data: PageData;
 </script>
 
 <section class="bg-gray-50 text-gray-800">
@@ -14,9 +13,6 @@
 					<a href="/login" class="mr-4 rounded bg-blue-600 px-6 py-3 text-white hover:bg-blue-700">
 						Login
 					</a>
-					<!-- <a href="/about" class="rounded border border-blue-600 px-6 py-3 text-blue-600 hover:bg-blue-100">
-						Learn More
-					</a> -->
 				</div>
 			</div>
 			<div class="mt-8 lg:mt-0 lg:w-1/2">

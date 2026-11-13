@@ -4,8 +4,10 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals: { getSession } }) => {
 	const session = await getSession();
+	console.log('[Admin Layout] Session:', session ? 'found' : 'null');
+
 	if (!session) {
-		console.log('Access Denied');
+		console.log('[Admin Layout] No session, redirecting to /');
 		throw redirect(303, '/');
 	}
 
@@ -16,8 +18,9 @@ export const load: LayoutServerLoad = async ({ locals: { getSession } }) => {
 		.eq('id', session.user.id)
 		.single();
 
+	console.log('[Admin Layout] Profile data:', data, 'Error:', dbError);
+
 	if (dbError || !data?.site_admin) {
-		console.log('Access Denied: User is not an admin');
 		throw error(403, 'Access Denied: You must be an administrator to access this page.');
 	}
 

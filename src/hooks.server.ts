@@ -1,21 +1,29 @@
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
 		cookies: {
-			get: (key) => event.cookies.get(key),
+			get: (key: string) => event.cookies.get(key),
 			/**
 			 * Note: You have to add the `path` variable to the
 			 * set and remove method due to sveltekit's cookie API
 			 * requiring this to be set, setting the path to an empty string
 			 * will replicate previous/standard behaviour (https://kit.svelte.dev/docs/types#public-types-cookies)
 			 */
-			set: (key, value, options) => {
-				event.cookies.set(key, value, { ...options, path: '/' });
+			set: (key: string, value: string, options: any) => {
+				console.log('[Hooks] Setting cookie:', key, 'options:', options);
+				event.cookies.set(key, value, {
+					...options,
+					path: '/',
+					httpOnly: true,
+					secure: false, // Set to true in production
+					sameSite: 'lax'
+				});
 			},
-			remove: (key, options) => {
+			remove: (key: string, options: any) => {
+				console.log('[Hooks] Removing cookie:', key);
 				event.cookies.delete(key, { ...options, path: '/' });
 			}
 		}
@@ -27,9 +35,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	 * you just call this `await getSession()`
 	 */
 	event.locals.getSession = async () => {
+		// Debug: log all cookies
+		console.log(
+			'[Hooks] Cookie keys:',
+			event.cookies.getAll().map((c) => c.name)
+		);
+
 		const {
-			data: { session }
+			data: { session },
+			error
 		} = await event.locals.supabase.auth.getSession();
+		if (error) {
+			console.error('[Hooks] Error getting session:', error);
+		}
+		console.log('[Hooks] Session found:', !!session);
 		return session;
 	};
 

@@ -1,5 +1,7 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { AuthApiError } from '@supabase/supabase-js';
+import { failWithAuthError } from '$lib/utils/authErrorHandler';
 
 export const load = (async ({ locals: { getSession } }) => {
 	const session = await getSession();
@@ -9,16 +11,109 @@ export const load = (async ({ locals: { getSession } }) => {
 	return {};
 }) satisfies PageServerLoad;
 
+function validatePassword(password: string): { isValid: boolean; errors: string[] } {
+	const errors: string[] = [];
+
+	// Check minimum length
+	if (password.length < 8) {
+		errors.push('Password must be at least 8 characters long');
+	}
+
+	// Check for at least one uppercase letter
+	if (!/[A-Z]/.test(password)) {
+		errors.push('Password must contain at least one uppercase letter');
+	}
+
+	// Check for at least one lowercase letter
+	if (!/[a-z]/.test(password)) {
+		errors.push('Password must contain at least one lowercase letter');
+	}
+
+	// Check for at least one number
+	if (!/\d/.test(password)) {
+		errors.push('Password must contain at least one number');
+	}
+
+	// Check for at least one special character
+	if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+		errors.push('Password must contain at least one special character');
+	}
+
+	return {
+		isValid: errors.length === 0,
+		errors
+	};
+}
+
 export const actions = {
 	default: async ({ locals: { supabase }, request }) => {
 		const requestData = await request.formData();
 
-		const password = String(requestData.get('password'));
-		const confirm = requestData.get('confirm-password');
+		const password = String(requestData.get('password')).trim();
+		const confirmPassword = String(requestData.get('confirm-password')).trim();
 
-		if (password && confirm && password == confirm) {
-			await supabase.auth.updateUser({ password });
-			redirect(303, '/control');
+		// Check if passwords are provided
+		if (!password) {
+			return fail(400, {
+				updatePassword: {
+					error: 'Please enter a password',
+					values: { password: '', confirmPassword: '' }
+				}
+			});
 		}
+
+		if (!confirmPassword) {
+			return fail(400, {
+				updatePassword: {
+					error: 'Please confirm your password',
+					values: { password: '', confirmPassword: '' }
+				}
+			});
+		}
+
+		// Check if passwords match
+		if (password !== confirmPassword) {
+			return fail(400, {
+				updatePassword: {
+					error: 'Passwords do not match',
+					values: { password: '', confirmPassword: '' }
+				}
+			});
+		}
+
+		// Validate password strength
+		const validation = validatePassword(password);
+		if (!validation.isValid) {
+			return fail(400, {
+				updatePassword: {
+					error: validation.errors.join('. '),
+					values: { password: '', confirmPassword: '' }
+				}
+			});
+		}
+
+		try {
+			const { error } = await supabase.auth.updateUser({ password });
+
+			if (error) {
+				return failWithAuthError(
+					error, 
+					'updatePassword', 
+					'Failed to update password. Please try again.',
+					{ password: '', confirmPassword: '' }
+				);
+			}
+		} catch (error) {
+			return failWithAuthError(
+				error, 
+				'updatePassword', 
+				'Server error. Please try again.',
+				{ password: '', confirmPassword: '' },
+				500
+			);
+		}
+
+		// Success - redirect outside try/catch (redirect() throws and would be swallowed)
+		redirect(303, '/control');
 	}
 } satisfies Actions;

@@ -25,7 +25,8 @@ Make sure to check how to set up a project with an .env file:
 # Values to be found on your Supabase project dashboard
 #https://supabase.com/dashboard/project/[YOUR_PROJECT_ID]/settings/api
 PUBLIC_SUPABASE_URL=
-PUBLIC_SUPABASE_ANON_KEY=
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=   # sb_publishable_… key
+SUPABASE_SECRET_KEY=              # sb_secret_… key, server-only
 ```
 
 

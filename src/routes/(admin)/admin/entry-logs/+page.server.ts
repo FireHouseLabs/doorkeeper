@@ -1,6 +1,8 @@
 import type { PageServerLoad } from './$types';
+import { requireAdmin } from '$lib/utils/requireAdmin';
 
 export const load: PageServerLoad = async ({ locals }) => {
+    await requireAdmin(locals.getSession);
     const { supabase } = locals;
 
     const { data, error } = await supabase
