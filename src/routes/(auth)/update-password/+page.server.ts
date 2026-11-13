@@ -103,9 +103,6 @@ export const actions = {
 					{ password: '', confirmPassword: '' }
 				);
 			}
-
-			// Success - redirect to control panel
-			redirect(303, '/control');
 		} catch (error) {
 			return failWithAuthError(
 				error, 
@@ -115,5 +112,8 @@ export const actions = {
 				500
 			);
 		}
+
+		// Success - redirect outside try/catch (redirect() throws and would be swallowed)
+		redirect(303, '/control');
 	}
 } satisfies Actions;

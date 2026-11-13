@@ -19,11 +19,7 @@ export const actions = {
 				if (error) {
 					throw error;
 				}
-
-				// Ensure session is established before redirect
-				if (data.session) {
-					throw redirect(303, '/control');
-				} else {
+				if (!data.session) {
 					throw new Error('No session created');
 				}
 			} catch (error) {
@@ -34,6 +30,9 @@ export const actions = {
 					{ email }
 				);
 			}
+
+			// Redirect outside the try/catch: redirect() throws, and the catch would swallow it
+			throw redirect(303, '/control');
 		}
 	},
 

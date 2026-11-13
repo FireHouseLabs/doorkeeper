@@ -1,31 +1,26 @@
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { fail, type RequestEvent } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import type { Actions, PageServerLoad } from './$types';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_SERVICE_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { SUPABASE_SECRET_KEY } from '$env/static/private';
 import { supabase } from '$lib/supabaseClient';
+import { requireAdmin } from '$lib/utils/requireAdmin';
 
 const supabaseUrl = PUBLIC_SUPABASE_URL;
-const supabaseServiceRoleKey = PUBLIC_SUPABASE_SERVICE_KEY;
+const supabaseServiceRoleKey = SUPABASE_SECRET_KEY;
 
 export const load = (async ({ locals: { getSession } }) => {
-	const session = await getSession();
-	if (!session) {
-		redirect(303, '/');
-	}
+	await requireAdmin(getSession);
 	return {};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
   default: async ({ request, locals: { getSession } }: RequestEvent) => {
+    const session = await requireAdmin(getSession);
     try {
       const formData = await request.formData();
       const email = formData.get('email') as string;
       const validEmail = /^[\w-.+]+@([\w-]+\.)+[\w-]{2,8}$/.test(email);
-      const session = await getSession();
-      
-      if (!session) {
-        throw redirect(302, '/login');
-      }
 
       if (!validEmail) {
         return fail(400, { errors: { email: 'Please enter a valid email address' }, email });

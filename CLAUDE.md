@@ -26,20 +26,20 @@ See `AGENTS.md` for the code style contract (tabs, single quotes, no trailing co
 
 ```bash
 PUBLIC_SUPABASE_URL
-PUBLIC_SUPABASE_ANON_KEY
-PUBLIC_SUPABASE_SERVICE_KEY     # service role key — see warning below
+PUBLIC_SUPABASE_PUBLISHABLE_KEY # sb_publishable_… (replaces legacy anon key)
 PUBLIC_SITE_LATITUDE            # site coords for the proximity check
 PUBLIC_SITE_LONGITUDE
 PUBLIC_SITE_RADIUS_METRES       # geofence radius, defaults to 300 if unset-but-invalid
 PUBLIC_SITE_MAX_ACCURACY_METRES # reject vaguer fixes than this, defaults to 100
 
+SUPABASE_SECRET_KEY            # sb_secret_… (replaces legacy service role key), server-only
 PRIVATE_INCEPTION_USERNAME
 PRIVATE_INCEPTION_PASSWORD
 PRIVATE_INCEPTION_SERIAL
 PRIVATE_INCEPTION_BASE_URL      # e.g. https://skytunnel.com.au/inception/<serial>
 ```
 
-⚠️ The Supabase **service role key is stored under a `PUBLIC_` prefix**, so Vite inlines it and it is reachable from client bundles. It is currently read in `serviceSupabase.ts`, `(admin)/admin/invite`, and `(admin)/admin/users`. Do not add new `PUBLIC_SUPABASE_SERVICE_KEY` usages; if you touch this area, migrate it to `$env/static/private` (`PRIVATE_SUPABASE_SERVICE_KEY`) rather than propagating the pattern.
+The Supabase secret key (`SUPABASE_SECRET_KEY`) bypasses RLS and must stay server-only: import it from `$env/static/private` and never give it a `PUBLIC_` prefix. It is read in `serviceSupabase.ts`, `(admin)/admin/invite`, and `(admin)/admin/users`. The legacy anon / service-role JWT keys are retired.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ This is the single most important thing to understand before editing server code
 
 1. **`locals.supabase`** — created per-request in `src/hooks.server.ts` via `createServerClient` with cookie get/set/remove. This is the only client bound to the caller's session. Use it for anything acting *as the user* (sign in, sign up, OTP, password reset). `locals.getSession()` is the convenience wrapper.
 2. **`$lib/supabaseClient`** — a module-level anon client with **no session attached**. Used today for `entry_logs` / `invite_logs` inserts and `profiles` reads/writes. Anything written through it runs as anon and depends entirely on permissive RLS — this is why admin checks and audit inserts work without a user JWT.
-3. **`serviceSupabase` (`$lib/utils/serviceSupabase.ts`)** and the ad-hoc `createClient(url, PUBLIC_SUPABASE_SERVICE_KEY)` calls in the admin routes — service role, bypasses RLS. Needed for `auth.admin.*` operations (invite, listUsers, deleteUser) and the `otp_codes` table.
+3. **`serviceSupabase` (`$lib/utils/serviceSupabase.ts`)** and the ad-hoc `createClient(url, SUPABASE_SECRET_KEY)` calls in the admin routes — service role, bypasses RLS. Needed for `auth.admin.*` operations (invite, listUsers, deleteUser) and the `otp_codes` table.
 
 Client-side, `src/routes/+layout.ts` builds a `createBrowserClient` with hand-rolled `document.cookie` handling and exposes it as `data.supabase`.
 

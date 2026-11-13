@@ -1,20 +1,19 @@
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { fail, type RequestEvent } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
 import type { Actions, PageServerLoad } from './$types';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_SERVICE_KEY } from '$env/static/public';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { SUPABASE_SECRET_KEY } from '$env/static/private';
 import { supabase } from '$lib/supabaseClient';
+import { requireAdmin } from '$lib/utils/requireAdmin';
 
 export const load = (async ({ locals: { getSession } }) => {
-	const session = await getSession();
-	if (!session) {
-		throw redirect(303, '/');
-	}
+	await requireAdmin(getSession);
 
-	if (!PUBLIC_SUPABASE_URL || !PUBLIC_SUPABASE_SERVICE_KEY) {
+	if (!PUBLIC_SUPABASE_URL || !SUPABASE_SECRET_KEY) {
 		return { users: [], error: 'Supabase configuration missing' };
 	}
 
-	const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_SERVICE_KEY);
+	const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 	// Fetch profiles from public schema
 	const { data: profiles, error: profilesError } = await supabase
@@ -58,8 +57,7 @@ export const load = (async ({ locals: { getSession } }) => {
 
 export const actions: Actions = {
 	toggleAdmin: async ({ request, locals: { getSession } }) => {
-		const session = await getSession();
-		if (!session) throw redirect(302, '/login');
+		const session = await requireAdmin(getSession);
 
 		const data = await request.formData();
 		const userId = data.get('userId') as string;
@@ -79,8 +77,7 @@ export const actions: Actions = {
 	},
 
 	deleteUser: async ({ request, locals: { getSession } }) => {
-		const session = await getSession();
-		if (!session) throw redirect(302, '/login');
+		const session = await requireAdmin(getSession);
 
 		const data = await request.formData();
 		const userId = data.get('userId') as string;
@@ -89,7 +86,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'You cannot delete yourself' });
 		}
 
-		const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_SERVICE_KEY);
+		const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 		// Delete from auth.users (cascade should handle profiles if configured,
 		// but we'll do both to be safe or if no cascade exists)

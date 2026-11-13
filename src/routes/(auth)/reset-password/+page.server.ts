@@ -41,9 +41,6 @@ export const actions = {
 					{ email }
 				);
 			}
-
-			// Success - redirect to confirmation page
-			redirect(303, '/email-confirm');
 		} catch (error) {
 			return failWithAuthError(
 				error, 
@@ -53,5 +50,8 @@ export const actions = {
 				500
 			);
 		}
+
+		// Success - redirect outside try/catch (redirect() throws and would be swallowed)
+		redirect(303, '/email-confirm');
 	}
 } satisfies Actions;

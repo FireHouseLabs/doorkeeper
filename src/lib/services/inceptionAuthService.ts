@@ -1,11 +1,15 @@
-import { PRIVATE_INCEPTION_USERNAME, PRIVATE_INCEPTION_PASSWORD } from '$env/static/private';
+import {
+    PRIVATE_INCEPTION_USERNAME,
+    PRIVATE_INCEPTION_PASSWORD,
+    PRIVATE_INCEPTION_BASE_URL
+} from '$env/static/private';
 
 let token: string | null = null;
 let lastRequestTime: number | null = null;
 
 async function authenticate() {
 
-    const response = await fetch('https://skytunnel.com.au/inception/IN96031349/api/v1/authentication/login', {
+    const response = await fetch(`${PRIVATE_INCEPTION_BASE_URL}/api/v1/authentication/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
